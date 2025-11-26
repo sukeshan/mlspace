@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identifying Tablet Purpose | Sukesh 🌖</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        article figure {
+            text-align: center;
+            margin: 40px 0;
+        }
+        article figure img {
+            max-width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        article figure figcaption {
+            margin-top: 10px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <nav>
+            <div class="logo"><a href="../index.html">Sukesh</a></div>
+            <div class="nav-links">
+                <a href="../blog.html">Back to Blog</a>
+            </div>
+        </nav>
+
+        <article>
+            <div class="article-header">
+                <span class="blog-meta">Computer Vision / Healthcare</span>
+                <h1>Extract the Drug Names and Uses from the Tablet Image using Spatial Information</h1>
+                <span class="blog-date">Nov 23, 2022</span>
+            </div>
+
+            <div class="article-content">
+                <p>In this blog, I talk about how to identify the drug name using spatial information. Before diving into it let’s quickly see the project's purpose.</p>
+
+                <h3>Project Purpose</h3>
+                <p>One day my mom gave a bunch of tablets and asked me to find the purpose of each tablet, I googled the tablet name and told her the purpose of each tablet. I tried to teach my mom to find the purpose of tablets by herself using google, but she was little confused. She knows how to use google but she doesn’t know what to google and find the correct webpage to know the uses after googling the tablet name. This motivated me to create an app to find the uses of the tablet by using only images (Tablet). I described the pipeline of my project shown below.</p>
+                
+                <figure>
+                    <img src="https://miro.medium.com/v2/resize:fit:1400/0*NSejncTGVkr3PH5k.png" alt="Project Pipeline">
+                    <figcaption>Project Pipeline</figcaption>
+                </figure>
+
+                <h3>Using Spatial Information</h3>
+                <p>There are two ways to identify the uses. One by using the drug name and other by using the drug brand here I’ve used the drug name to find the purpose. I found an insight when I was collecting tablet images: every company prints the Drug name in bold font, and the font size is bigger than other words. I have drawn a box on the below image.</p>
+                
+                <figure>
+                    <img src="https://miro.medium.com/v2/resize:fit:1400/1*O-o1IgKAJn2Uvpihudr5mA.png" alt="Tablet Image (Drug name highlighted by the yellow box)">
+                    <figcaption>Tablet Image (Drug name highlighted by the yellow box)</figcaption>
+                </figure>
+
+                <p>First I extract the text and its coordinates from the image using OCR and I use the three conditions below to identify the drug names:</p>
+                <ul>
+                    <li>Text Size</li>
+                    <li>Keyword Technique</li>
+                    <li>Pixel Information</li>
+                </ul>
+
+                <h3>Text Size</h3>
+                <p>We know the drug names are printed in bold and the font size is big compared to others so I wrote conditions to filter the bold and big-size font. The output of the conditions looks like this.</p>
+                
+                <figure>
+                    <img src="https://miro.medium.com/v2/resize:fit:1400/1*XpfkPWeSlWX7eqB_A5E3pA.png" alt="Output of the Text size condition">
+                    <figcaption>Output of the Text size condition</figcaption>
+                </figure>
+
+                <h3>Keyword Technique</h3>
+                <p>Now we need to find out the keyword “tablet” from the 15 words or sentences filtered by condition-1 but the problem over here is sometimes OCR reads the tablet as tablt or tabalt or tablt or tablett or tablets because of the poor image condition so I split the “tablet” word into N-grams and slide through entire sentences and filter the sentences or words by using certain threshold (chosen by experiment) then output looks like in the below image.</p>
+                
+                <figure>
+                    <img src="https://miro.medium.com/v2/resize:fit:1400/1*WNJwz72LKYFVKcbqpJGLmA.png" alt="Output of Keyword Technique">
+                    <figcaption>Output of Keyword Technique</figcaption>
+                </figure>
+
+                <h3>Pixel Information</h3>
+                <p>In most of the cases we found the drug name in the keyword technique condition but some drug names were printed in two lines shown below image for that case we need to use the pixel information.</p>
+                
+                <figure>
+                    <img src="https://miro.medium.com/v2/resize:fit:1208/1*FKVhlw34bbQdH9Z6lF4FlQ.png" alt="Drug name printed in two lines">
+                    <figcaption>Drug name printed in two lines</figcaption>
+                </figure>
+
+                <p>The keyword Technique filter only “Tablets IP” (Green box) but I need a “Paracetamol” too (Red box) for that I calculate the height of the red box i.e (font size) compare with the green box whether two font sizes are close to each other and also calculate distance between the word “Paracetamol” and “Tablets IP”. If it passes all conditions with my given threshold, I’ll take the word “Paracetamol” as a drug.</p>
+
+                <h3>Future work</h3>
+                <p>Sometimes OCR read images wrongly because of the poor image quality to sort out the problem I’ll create a spell check model to correct the drug spelling after extraction. I totally rely on the pharmEasy website to extract the drug information to replace the site, I’ll create a database to know about the drugs because of doing this I’ll get more information about drugs and also reduce latency (scrapping drug information from pharmEasy website alone takes 1.5 seconds from total pipeline latency).</p>
+            </div>
+        </article>
+
+        <footer>
+            <div>
+                <p>© 2025 Sukesh</p>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>

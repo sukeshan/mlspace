@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sukesh 🌖</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <canvas id="background-canvas"></canvas>
+    <div class="container">
+        <nav>
+            <div class="logo">Sukesh</div>
+            <div class="nav-links">
+                <a href="index.html" class="active">Home</a>
+                <a href="#blog">Blog</a>
+                <a href="mailto:sukeshram5@gmail.com">Contact</a>
+            </div>
+        </nav>
+
+        <header class="hero">
+            <h1 class="glow-text">Sukeshan</h1>
+            <div class="hero-intro">
+                <p>
+                    <span class="glow-text-word role-highlight">Senior Research Engineer</span>
+                    <span class="glow-text-word">specializing in fine-tuning multimodality
+                        generative models and designing
+                        inference pipelines for internet-scale traffic.</span>
+                </p>
+
+                <div class="current-role">
+                    <span class="status-dot"></span>
+                    <span>Currently building visual search at <strong>Shoppin.app</strong></span>
+                </div>
+            </div>
+        </header>
+
+        <section id="blog">
+            <div class="section-header">
+                <h2 class="glow-text">Signals</h2>
+                <p class="glow-text-word" style="color: var(--text-muted); margin-top: 10px; font-size: 1.2rem;">
+                    Technical blogs on AI, Tokenization, and Engineering.</p>
+            </div>
+            <div id="cluster-container" class="blog-grid">
+                <!-- Clusters will be injected here -->
+            </div>
+        </section>
+
+        <!-- Cluster Modal -->
+        <div id="blog-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-modal">&times;</span>
+                <h2 id="modal-title">Cluster Title</h2>
+                <div id="modal-blog-list" class="modal-blog-grid">
+                    <!-- Blog items will be injected here -->
+                </div>
+            </div>
+        </div>
+
+
+
+        <footer>
+            <div>
+                <p>© 2025 Sukesh</p>
+            </div>
+            <div class="footer-links">
+                <a href="https://github.com/sukeshan" target="_blank">GitHub</a>
+                <a href="https://linkedin.com/in/sukeshan-r-88aab9159/" target="_blank">LinkedIn</a>
+                <a href="https://medium.com/@sukeshram5" target="_blank">Medium</a>
+            </div>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

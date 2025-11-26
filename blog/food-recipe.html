@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Recipe Retrieval | Sukesh 🌖</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        .diagram-container {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 30px;
+            margin: 40px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .diagram-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 20px;
+            width: 100%;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 10px;
+        }
+
+        svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .flow-step rect {
+            fill: rgba(255, 255, 255, 0.05);
+            stroke: var(--text-muted);
+            stroke-width: 1;
+            transition: all 0.3s ease;
+        }
+
+        .flow-step:hover rect {
+            fill: rgba(255, 255, 255, 0.1);
+            stroke: var(--accent-color);
+        }
+
+        .flow-text {
+            fill: var(--text-main);
+            font-family: var(--font-main);
+            font-size: 14px;
+            text-anchor: middle;
+            dominant-baseline: middle;
+        }
+        
+        .flow-subtext {
+            fill: var(--text-muted);
+            font-family: var(--font-main);
+            font-size: 10px;
+            text-anchor: middle;
+        }
+
+        .arrow {
+            stroke: var(--text-muted);
+            stroke-width: 2;
+            fill: none;
+            marker-end: url(#arrowhead);
+        }
+
+        .math-display {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.1rem;
+            color: var(--text-main);
+            text-align: center;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        .bipartite-node circle {
+            fill: #1a1a1a;
+            stroke: var(--accent-color);
+            stroke-width: 2;
+        }
+
+        .bipartite-edge {
+            stroke: rgba(255, 255, 255, 0.2);
+            stroke-width: 1;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <nav>
+            <div class="logo"><a href="../index.html">Sukesh</a></div>
+            <div class="nav-links">
+                <a href="../blog.html">Back to Blog</a>
+            </div>
+        </nav>
+
+        <article>
+            <div class="article-header">
+                <span class="blog-meta">Retrieval / Embeddings</span>
+                <h1>Search Engine for Food Recipes using Bipartite graph</h1>
+                <span class="blog-date">Oct 30, 2022</span>
+            </div>
+
+            <div class="article-content">
+                <h3>Introduction</h3>
+                <p>There are lot of food websites are available in the internet. Every site having own search engine to retrieve food recipes based on the user-given queries. The aim of every sites search engine (SE) are retrieving recipes more likely to be the user-given queries(recipes). Most of the time user doesn’t have an ingredient of SE-recommended recipes this is one of the main drawbacks of this kind of website SE. To address this problem created a search engine that will retrieve food recipes based on the user-given food ingredients instead of user-given food recipes.</p>
+
+                <h3>Dataset</h3>
+                <blockquote>Where there is data smoke, there is business fire. — Thomas Redman</blockquote>
+                <p>As we know data is fuel for the machine learning model so we have given more importance to dataset preparation. In the food space, lot of datasets are available in publicly such as Recipe1M+, Food101, IIITD CulinaryDB dataset, etc. Those sites are loosing some important features such as recipe image or cuisine or ratings or food category i.e(dinner or lunch), so decided to scrap a data from online website such as Times of India, All recipes. we scrapped recipe title, ingredients, cuisine, category, instructions, recipe image, ratings and webpage link. Next, will discuss the techniques and the challenges solved during data cleaning.</p>
+
+                <h3>Data Cleaning</h3>
+                <blockquote>No Data is Clean ,but most is Useful. — Dean Abbott</blockquote>
+                <p>Since collected data had set of ingredient text for each dish , we need to build a high quality vocabulary for ingredients so we pass this through a custom-built pipeline. This eliminates numerical quantity words (1/2 cups, 2 leaves) and removes the most frequent appearing words (salt, water, etc..) that are not considering food ingredient.</p>
+
+                <div class="diagram-container">
+                    <span class="diagram-label">Data Cleaning Pipeline</span>
+                    <svg viewBox="0 0 800 140" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#888" />
+                            </marker>
+                        </defs>
+                        
+                        <!-- Input -->
+                        <g class="flow-step">
+                            <rect x="10" y="40" width="140" height="60" rx="5" />
+                            <text x="80" y="65" class="flow-text">Raw Input</text>
+                            <text x="80" y="85" class="flow-subtext">"1/2 cup chopped"</text>
+                        </g>
+                        <path d="M150 70 L175 70" class="arrow" />
+
+                        <!-- Step 1 -->
+                        <g class="flow-step">
+                            <rect x="175" y="40" width="140" height="60" rx="5" />
+                            <text x="245" y="65" class="flow-text">Remove Qty</text>
+                            <text x="245" y="85" class="flow-subtext">"chopped"</text>
+                        </g>
+                        <path d="M315 70 L340 70" class="arrow" />
+
+                        <!-- Step 2 -->
+                        <g class="flow-step">
+                            <rect x="340" y="40" width="140" height="60" rx="5" />
+                            <text x="410" y="65" class="flow-text">Stopwords</text>
+                            <text x="410" y="85" class="flow-subtext">Removes common</text>
+                        </g>
+                        <path d="M480 70 L505 70" class="arrow" />
+
+                        <!-- Step 3 -->
+                        <g class="flow-step">
+                            <rect x="505" y="40" width="140" height="60" rx="5" />
+                            <text x="575" y="65" class="flow-text">Modifiers</text>
+                            <text x="575" y="85" class="flow-subtext">Removes adverbs</text>
+                        </g>
+                        <path d="M645 70 L670 70" class="arrow" />
+
+                        <!-- Output -->
+                        <g class="flow-step">
+                            <rect x="670" y="40" width="120" height="60" rx="5" style="stroke: var(--accent-color);" />
+                            <text x="730" y="70" class="flow-text" style="fill: var(--accent-color); font-weight: bold;">Cleaned</text>
+                        </g>
+                    </svg>
+                </div>
+
+                <p>Created a regex function to remove adjective and adverb and action words(mashed, remove, grated, fresh) . Finally lemmatize ingredients (chillies, cloves, almonds). Here is an example of the transformation:</p>
+
+                <div class="diagram-container">
+                    <span class="diagram-label">Pipeline Input vs Output</span>
+                    <svg viewBox="0 0 600 150" xmlns="http://www.w3.org/2000/svg">
+                         <defs>
+                            <marker id="arrowhead2" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#888" />
+                            </marker>
+                        </defs>
+                        <text x="50" y="30" class="flow-text" style="text-anchor: start; font-weight: bold; fill: var(--text-muted);">INPUT</text>
+                        <text x="400" y="30" class="flow-text" style="text-anchor: start; font-weight: bold; fill: var(--accent-color);">OUTPUT</text>
+                        
+                        <!-- Line 1 -->
+                        <text x="50" y="70" class="flow-text" style="text-anchor: start;">"2 cloves garlic, minced"</text>
+                        <path d="M250 65 L350 65" class="arrow" style="marker-end: url(#arrowhead2);" />
+                        <text x="400" y="70" class="flow-text" style="text-anchor: start;">"garlic"</text>
+
+                        <!-- Line 2 -->
+                        <text x="50" y="110" class="flow-text" style="text-anchor: start;">"1/4 cup fresh lime juice"</text>
+                        <path d="M250 105 L350 105" class="arrow" style="marker-end: url(#arrowhead2);" />
+                        <text x="400" y="110" class="flow-text" style="text-anchor: start;">"lime_juice"</text>
+                    </svg>
+                </div>
+
+                <h3>Model</h3>
+                <blockquote>A theory is just a mathematical model to describe the observations.</blockquote>
+                <p>After done rigorous preprocessing we have high quality vocabulary for ingredients. Now create a model to retrieve food recipes based on the user given ingredients. We tried two methodologies for this problem,</p>
+                <ul>
+                    <li>Embedding based technique</li>
+                    <li>Graph based technique</li>
+                </ul>
+
+                <h4>Embedding based technique</h4>
+                <p>People in this space are using embedding based techniques to retrieve similar recipes so we are also created embeddings for each ingredients by recipe instructions. To represent recipes in embedding space, we simply averaging the embeddings of each recipe’s ingredient.</p>
+                
+                <div class="diagram-container">
+                    <span class="diagram-label">Recipe Embedding Formula</span>
+                    <div class="math-display">
+                        E<sub>recipe</sub> = <span style="font-size: 2em; vertical-align: middle;">∑</span> ( E<sub>ingredient_i</sub> ) / N
+                    </div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 15px; text-align: center;">
+                        Where <em>N</em> is the number of ingredients in the recipe.
+                    </p>
+                </div>
+
+                <p>Based on the user given ingredients we can retrieve similar recipes which are close in the embedding space using cosine distance function.</p>
+                
+                <div class="diagram-container">
+                    <span class="diagram-label">Cosine Similarity</span>
+                    <div class="math-display">
+                        Similarity(A, B) = (A · B) / (||A|| ||B||)
+                    </div>
+                </div>
+
+                <h4>Graph based technique</h4>
+                <p>In search engine, Embedding based technique results are not significant because of creating embedding for every ingredients are complex. To overcome from the problem we approached graph based technique. Using bipartite graph retrieve recipes by simply and significantly.</p>
+                
+                <div class="diagram-container">
+                    <span class="diagram-label">Bipartite Graph Structure</span>
+                    <svg viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg">
+                        <text x="150" y="30" class="flow-text" style="fill: var(--accent-color); font-weight: bold;">RECIPES</text>
+                        <text x="450" y="30" class="flow-text" style="fill: var(--accent-color); font-weight: bold;">INGREDIENTS</text>
+
+                        <!-- Edges -->
+                        <line x1="150" y1="80" x2="450" y2="80" class="bipartite-edge" />
+                        <line x1="150" y1="80" x2="450" y2="150" class="bipartite-edge" />
+                        <line x1="150" y1="150" x2="450" y2="80" class="bipartite-edge" />
+                        <line x1="150" y1="150" x2="450" y2="220" class="bipartite-edge" />
+                        <line x1="150" y1="220" x2="450" y2="150" class="bipartite-edge" />
+                        
+                        <!-- Nodes Left -->
+                        <g class="bipartite-node">
+                            <circle cx="150" cy="80" r="20" />
+                            <text x="150" y="85" class="flow-text" style="font-size: 12px; fill: #fff;">R1</text>
+                        </g>
+                         <g class="bipartite-node">
+                            <circle cx="150" cy="150" r="20" />
+                            <text x="150" y="155" class="flow-text" style="font-size: 12px; fill: #fff;">R2</text>
+                        </g>
+                         <g class="bipartite-node">
+                            <circle cx="150" cy="220" r="20" />
+                            <text x="150" y="225" class="flow-text" style="font-size: 12px; fill: #fff;">R3</text>
+                        </g>
+
+                        <!-- Nodes Right -->
+                         <g class="bipartite-node">
+                            <circle cx="450" cy="80" r="20" />
+                            <text x="450" y="85" class="flow-text" style="font-size: 12px; fill: #fff;">I1</text>
+                        </g>
+                         <g class="bipartite-node">
+                            <circle cx="450" cy="150" r="20" />
+                            <text x="450" y="155" class="flow-text" style="font-size: 12px; fill: #fff;">I2</text>
+                        </g>
+                         <g class="bipartite-node">
+                            <circle cx="450" cy="220" r="20" />
+                            <text x="450" y="225" class="flow-text" style="font-size: 12px; fill: #fff;">I3</text>
+                        </g>
+
+                        <text x="300" y="280" class="flow-subtext">Edges are weighted by TF-IDF scores</text>
+                    </svg>
+                </div>
+
+                <p>In bipartite graph have two set of nodes. With in a set of nodes are not connect each other. Nodes {RA, RB, RC, RD} are belonging to Recipes set and nodes {IA, IB, IC, ID} are belonging to Ingredients set. Now we connect each ingredient belonging to the their recipe and allocated weight to each edges using the Tf-idf method. Now based on the user given ingredient we retrieve food recipes from recipes set which are maximum matching to user given ingredients in Ingredients set and sorting the recipes based on the sum of user given ingredient’s weight in each node link.</p>
+
+                <h3>Ingredient Alternative</h3>
+                <p>Some cases user doesn’t have an ingredient mentioned in recipe’s instruction . To address this problem created a context based embedding for each ingredients using cosine distance function recommend an alternative or substitute ingredient which are very close to the missing ingredient in embedding space.</p>
+
+                <h4>Data</h4>
+                <p>To create an embedding for each ingredients we used recipes instruction as an input data. Due to some noise in recipe instructions we created a custom preprocessing pipeline for eliminate noise such as remove stopwords, lemmatize text, lower case characters and grouping multi word as a single word( red pepper as red_pepper)</p>
+
+                <h4>Model</h4>
+                <p>Word2Vec Technique is used to create a context based word embedding but word2vec can’t handle the unknown words (Out Of Vocabulary OOV)so we are using FastText model because it use subword tokenization technique for create vocabulary and create an embedding for each ingredients.</p>
+            </div>
+        </article>
+
+        <footer>
+            <div>
+                <p>© 2025 Sukesh</p>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>

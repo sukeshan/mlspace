@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why Do We Need √D_k? | Sukesh 🌖</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <style>
+        .math-block {
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 30px 0;
+            font-size: 1.4rem;
+            color: var(--text-main);
+        }
+
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 8px;
+            vertical-align: middle;
+        }
+
+        .numerator {
+            border-bottom: 1px solid var(--text-main);
+            padding: 0 5px 2px;
+            display: block;
+            text-align: center;
+        }
+
+        .denominator {
+            padding: 2px 5px 0;
+            display: block;
+            text-align: center;
+        }
+
+        .math-var {
+            font-style: italic;
+            font-family: serif;
+            /* Use serif for variables like typical math notation */
+        }
+
+        .math-func {
+            font-family: var(--font-main);
+        }
+
+        .example-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .example-title {
+            font-family: var(--font-main);
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-main);
+            display: block;
+            font-size: 1rem;
+        }
+
+        .example-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .val {
+            color: #4ade80;
+        }
+
+        .bad {
+            color: #f87171;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <nav>
+            <div class="logo"><a href="../index.html">Sukesh</a></div>
+            <div class="nav-links">
+                <a href="../blog.html">Back to Blog</a>
+            </div>
+        </nav>
+
+        <article>
+            <div class="article-header">
+                <span class="blog-meta">NLP</span>
+                <h1>Why Do We Need √D<sub>k</sub>?</h1>
+            </div>
+
+            <div class="article-content">
+                <p>The Attention mechanism is the engine under the hood of every LLM. But there's one tiny detail in the
+                    formula that often gets glossed over: the division by √D<sub>k</sub>.</p>
+
+                <p>Why is it there? Is it just a magic number? Let's break it down.</p>
+
+                <h3>The Formula</h3>
+                <p>Here's the classic self-attention equation:</p>
+
+                <div class="math-block">
+                    Attention Score = Softmax(
+                    <div class="fraction">
+                        <span class="numerator"><span class="math-var">Q</span><span
+                                class="math-var">K</span><sup>T</sup></span>
+                        <span class="denominator">√<span class="math-var">D</span><sub>k</sub></span>
+                    </div>
+                    )<span class="math-var">V</span>
+                </div>
+
+                <p><span class="math-var">D</span><sub>k</sub> is the dimension of your Query and Key vectors. In the
+                    original paper, it was 64. In modern models, it can be much larger.</p>
+
+                <h3>The Variance Problem</h3>
+                <p>Here's the deal: when you multiply two large vectors (dot product), the result can get huge.
+                    Mathematically speaking, the <strong>variance</strong> of the result grows with the dimension of the
+                    vectors.</p>
+
+                <p>If <span class="math-var">Q</span> and <span class="math-var">K</span> have a variance of 1, their
+                    dot product <span class="math-var">Q</span><span class="math-var">K</span><sup>T</sup> has a
+                    variance of <span class="math-var">D</span><sub>k</sub>.</p>
+
+                <p><strong>Let's see this in action.</strong></p>
+
+                <p>Imagine we have random vectors. If we increase the dimension from 5 to 10, look what happens to the
+                    values:</p>
+
+                <p><strong>5-Dimensional Vectors (<span class="math-var">D</span><sub>k</sub>=5)</strong><br>
+                    Dot Product: 1.57<br>
+                    Variance: ≈ 5.67</p>
+
+                <p><strong>10-Dimensional Vectors (<span class="math-var">D</span><sub>k</sub>=10)</strong><br>
+                    Dot Product: -6.43<br>
+                    Variance: ≈ 10.47</p>
+
+                <p>See that? Doubling the dimension roughly doubles the variance. Now imagine <span
+                        class="math-var">D</span><sub>k</sub>=64 or 128. The values explode.</p>
+
+                <h3>The Softmax Trap</h3>
+                <p>Why do we care if the values are huge? Because of <strong>Softmax</strong>.</p>
+
+                <p>Softmax loves to pick a winner. Let's look at a real example to see the difference.</p>
+
+                <div class="example-box">
+                    <span class="example-title">Scenario A: Without Scaling (High Variance)</span>
+                    <div class="example-row"><span>Logits:</span> <span>[10.0, 40.0, -10.0]</span></div>
+                    <div class="example-row"><span>Softmax:</span> <span class="bad">[0.0, 1.0, 0.0]</span></div>
+                    <div style="margin-top: 10px; color: var(--text-muted);">
+                        Result: The function is saturated. Gradients ≈ 0. Model stops learning.
+                    </div>
+                </div>
+
+                <div class="example-box">
+                    <span class="example-title">Scenario B: With Scaling (Divided by √D<sub>k</sub> ≈ 8)</span>
+                    <div class="example-row"><span>Logits:</span> <span>[1.25, 5.0, -1.25]</span></div>
+                    <div class="example-row"><span>Softmax:</span> <span class="val">[0.02, 0.96, 0.02]</span></div>
+                    <div style="margin-top: 10px; color: var(--text-muted);">
+                        Result: Smooth distribution. Gradients are healthy. Model learns.
+                    </div>
+                </div>
+
+                <p>When Softmax saturates like this (outputs close to 0 or 1), the gradients become tiny. Effectively
+                    <strong>zero</strong>. This is the <strong>Vanishing Gradient</strong> problem.
+                </p>
+
+                <p>If the gradients vanish, the model stops learning. Game over.</p>
+
+                <h3>The Fix: √D<sub>k</sub></h3>
+                <p>To stop the gradients from vanishing, we need to keep the variance under control. We want the
+                    variance to be 1, regardless of how big <span class="math-var">D</span><sub>k</sub> is.</p>
+
+                <p>The math trick is simple: if you scale a variable by √<span class="math-var">D</span><sub>k</sub>,
+                    you scale its variance by <span class="math-var">D</span><sub>k</sub>.</p>
+
+                <div class="math-block">
+                    Var(
+                    <div class="fraction">
+                        <span class="numerator"><span class="math-var">Q</span><span
+                                class="math-var">K</span><sup>T</sup></span>
+                        <span class="denominator">√<span class="math-var">D</span><sub>k</sub></span>
+                    </div>
+                    ) =
+                    <div class="fraction">
+                        <span class="numerator">1</span>
+                        <span class="denominator"><span class="math-var">D</span><sub>k</sub></span>
+                    </div>
+                    · Var(<span class="math-var">Q</span><span class="math-var">K</span><sup>T</sup>) =
+                    <div class="fraction">
+                        <span class="numerator">1</span>
+                        <span class="denominator"><span class="math-var">D</span><sub>k</sub></span>
+                    </div>
+                    · <span class="math-var">D</span><sub>k</sub> = 1
+                </div>
+
+                <p>By dividing by √<span class="math-var">D</span><sub>k</sub>, we force the variance back to 1. This
+                    keeps the values in a nice range for Softmax, ensuring the gradients flow smoothly and the model
+                    actually learns.</p>
+
+                <p>And that's why we divide by √<span class="math-var">D</span><sub>k</sub>. It's not magic; it's just
+                    variance control.</p>
+            </div>
+        </article>
+
+        <footer>
+            <div>
+                <p>© 2025 Sukesh</p>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>
